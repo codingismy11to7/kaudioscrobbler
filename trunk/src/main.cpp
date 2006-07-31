@@ -45,11 +45,11 @@ int main(int argc, char **argv)
     KApplication app;
     KAudioScrobbler *mainWin = 0;
 
-    if (app.isRestored())
+    /*if (app.isRestored())
     {
         RESTORE(KAudioScrobbler);
     }
-    else
+    else*/
     {
         // no session.. just start up normally
         KCmdLineArgs *args = KCmdLineArgs::parsedArgs();
@@ -57,6 +57,7 @@ int main(int argc, char **argv)
         /// @todo do something with the command line args here
 
         mainWin = new KAudioScrobbler();
+        KApplication::connect( &app, SIGNAL( lastWindowClosed() ), mainWin, SIGNAL( exitCalled() ) );
         app.setMainWidget( mainWin );
         mainWin->show();
 
