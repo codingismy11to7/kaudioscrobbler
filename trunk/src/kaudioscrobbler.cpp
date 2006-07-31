@@ -21,6 +21,7 @@
 #include "kaudioscrobbler.h"
 
 #include <qlabel.h>
+#include <qpushbutton.h>
 
 #include <kmainwindow.h>
 #include <klocale.h>
