@@ -21,6 +21,9 @@
     <run>
       <mainprogram>src/kaudioscrobbler</mainprogram>
       <directoryradio>executable</directoryradio>
+      <runarguments>
+        <kaudioscrobbler></kaudioscrobbler>
+      </runarguments>
     </run>
     <configurations>
       <optimized>
