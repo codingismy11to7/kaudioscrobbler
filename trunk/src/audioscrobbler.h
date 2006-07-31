@@ -34,8 +34,10 @@
 #include "scrobrequestthread.h"
 #include "kascachelist.h"
 
-//#define HANDSHAKE_ADDR "http://post.audioscrobbler.com?hs=true&p=1.1&c=juk&v=0.0.1&u="
-#define HANDSHAKE_ADDR "http://progoth/~progoth/kas/?hs=true&p=1.1&c=juk&v=0.0.1&u="
+#define HANDSHAKE_ADDR "http://post.audioscrobbler.com?hs=true&p=1.1&c=juk&v=0.0.1&u="
+//#define HANDSHAKE_ADDR "http://progoth/~progoth/kas/?hs=true&p=1.1&c=juk&v=0.0.1&u="
+
+class KConfigSkeleton;
 
 /**
 @author Steven Scott
@@ -62,7 +64,11 @@ public slots:
     void showSettings();
     
     void setSettings( void );
-        
+
+protected slots:        
+    void saveCacheToDisk( void );
+    void loadCacheFromDisk( void );
+    
 protected:
     /*QString*/void doRequest( const KURL &address, QString postdata = QString::null );
     
@@ -72,13 +78,12 @@ protected:
     
     void setPassword( QString password );
     
-    void saveCacheToDisk( void );
-    void loadCacheFromDisk( void );
-    
     inline QString md5Response( void );
     
     KASCacheList m_subcache;
     QMutex m_cache_mutex;
+    KConfigSkeleton *m_cachesave;
+    QTimer *cacheTimer;
     
     QString m_postaddress;
     QString m_challenge;
