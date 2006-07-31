@@ -42,7 +42,12 @@ int KASCacheList::getSubCount( void )
     return count() / 6;
 }
 
-void KASCacheList::addSubmission( QString artist, QString songtitle, QString album, QString mbid, int seconds/*, QString time*/ )
+void KASCacheList::addSubmission( const ScrobSongData &in )
+{
+    addSubmission( in.artist, in.songtitle, in.album, in.mbid, in.length );
+}
+
+void KASCacheList::addSubmission( QString artist, QString songtitle, QString album, QString mbid, int seconds )
 {
     append( KURL::encode_string_no_slash( artist ).utf8() );
     append( KURL::encode_string_no_slash( songtitle ).utf8() );

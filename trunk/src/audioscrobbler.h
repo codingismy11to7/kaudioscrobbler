@@ -29,13 +29,20 @@
 
 #include <kurl.h>
 #include <kdebug.h>
+#include <klocale.h>
 
 #include "qmd5.h"
 #include "scrobrequestthread.h"
 #include "kascachelist.h"
 
+#define MIN_SONG_LEN 30
+#define MAX_SONG_LEN (30 * 60)
+#define MIN_PLAY_TIME 240
+
+#define MIN(a,b) ((a)<(b))?(a):(b)
+
 //#define HANDSHAKE_ADDR "http://post.audioscrobbler.com?hs=true&p=1.1&c=juk&v=0.0.1&u="
-#define HANDSHAKE_ADDR "http://progoth/~progoth/kas/?hs=true&p=1.1&c=juk&v=0.0.1&u="
+#define HANDSHAKE_ADDR "http://localhost/~progoth/?hs=true&p=1.1&c=juk&v=0.0.1&u="
 
 class KConfigSkeleton;
 
@@ -55,8 +62,14 @@ signals:
     void songPlayed( const QString& );
 
 public slots:
+    void play( const QString &artist, const QString &songtitle, const QString &album,
+               const QString &musicbrainzid, unsigned int length );
+    void pause( void );
+    void unpause( void );
+    void seek( void );
+    void stop( void );
+
     void doHandshake();
-    void run_test2( void );
     void gotResponse( QString response );
     void gotError( void );
     
@@ -72,6 +85,7 @@ protected slots:
     void loadCacheFromDisk( void );
     
     void submit( void );
+    void newSong( void );
     
 protected:
     /*QString*/void doRequest( const KURL &address, QString postdata = QString::null );
@@ -99,11 +113,17 @@ protected:
     
     QTimer *hsTimer;
     QTimer *intervalTimer;
+    QTimer *songPlayTimer;
     
     ScrobRequestThread *m_job_thread;
     
     unsigned int m_interval;
     unsigned int m_cachesaveinterval;
+    
+    ScrobSongData m_currentsong;
+    QDateTime m_playtime;
+    unsigned int m_remainingtime;
+    bool m_songplaying;
 };
 
 #endif

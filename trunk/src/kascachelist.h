@@ -22,6 +22,14 @@
 
 #include <qstringlist.h>
 
+typedef struct {
+    QString artist;
+    QString songtitle;
+    QString album;
+    QString mbid;
+    unsigned int length;
+} ScrobSongData;
+
 /**
 @author Steven Scott
 */
@@ -35,6 +43,7 @@ public:
 
     int getSubCount( void );
     
+    void addSubmission( const ScrobSongData & );
     void addSubmission( QString artist, QString songtitle, QString album, QString mbid, int seconds/*, QString time*/ );
 
     QCString getPostData( QString username, QString md5response ); 

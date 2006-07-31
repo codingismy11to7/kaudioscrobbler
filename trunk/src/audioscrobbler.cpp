@@ -28,7 +28,7 @@
 
 AudioScrobbler::AudioScrobbler( QWidget *parent )
   : QObject(), m_postaddress(QString::null), m_challenge(QString::null), m_handshake_done(false),
-    m_interval(0), m_cachesaveinterval(300000)
+    m_interval(0), m_cachesaveinterval(300000), m_songplaying(false)
 {
     m_job_thread = new ScrobRequestThread( );
     
@@ -47,6 +47,9 @@ AudioScrobbler::AudioScrobbler( QWidget *parent )
     connect( m_job_thread, SIGNAL(response(QString)), this, SLOT(gotResponse(QString)) );
     connect( m_job_thread, SIGNAL(http_error()), this, SLOT(gotError(void )) );
     
+    songPlayTimer = new QTimer( this );
+    connect( songPlayTimer, SIGNAL(timeout()), this, SLOT(newSong()) );
+    
     hsTimer = new QTimer( this );
     connect( hsTimer, SIGNAL(timeout()), this, SLOT(doHandshake()) );
 
@@ -56,20 +59,95 @@ AudioScrobbler::AudioScrobbler( QWidget *parent )
     setSettings();
 }
 
+void AudioScrobbler::play( const QString &artist, const QString &songtitle, const QString &album,
+               const QString &musicbrainzid, unsigned int length )
+{
+    if( songPlayTimer->isActive() ) songPlayTimer->stop();
+    
+    emit statusMessage( tr2i18n( "Playing" ) );
+    
+    if( length < MIN_SONG_LEN || length > MAX_SONG_LEN ) return;
+    
+    m_currentsong.artist = artist;
+    m_currentsong.songtitle = songtitle;
+    m_currentsong.album = album;
+    m_currentsong.mbid = musicbrainzid;
+    m_currentsong.length = length;
+    
+    m_playtime = QDateTime::currentDateTime();
+    m_songplaying = true;
+    m_remainingtime = MIN( 1 + length / 2, MIN_PLAY_TIME );
+    songPlayTimer->start( m_remainingtime * 1000, true );
+}
+
+void AudioScrobbler::pause( void )
+{
+    if( !songPlayTimer->isActive() || !m_songplaying ) return;
+    songPlayTimer->stop();
+    QDateTime cur = QDateTime::currentDateTime();
+    
+    m_remainingtime -= m_playtime.secsTo( cur );
+    
+    emit statusMessage( i18n( "Paused" ) );    
+    m_songplaying = false;
+}
+
+void AudioScrobbler::unpause( void )
+{
+    if( songPlayTimer->isActive() || m_songplaying ) return;
+    m_songplaying = true;
+    m_playtime = QDateTime::currentDateTime();
+    songPlayTimer->start( m_remainingtime * 1000, true );
+
+    emit statusMessage( i18n( "Playing" ) );
+}
+
+void AudioScrobbler::seek( void )
+{
+    if( songPlayTimer->isActive() )
+    {
+        songPlayTimer->stop();
+        emit statusMessage( i18n( "Seek; submission cancelled" ) );
+    }
+}
+
+void AudioScrobbler::stop( void )
+{
+    if( songPlayTimer->isActive() )
+        songPlayTimer->stop();
+    m_songplaying = false;
+    emit statusMessage( i18n( "Stopped" ) );
+}
+
+void AudioScrobbler::newSong( void )
+{
+    m_cache_mutex.lock();
+    m_subcache.addSubmission( m_currentsong );
+    saveLockedCacheToDisk();
+    m_cache_mutex.unlock();
+    emit songPlayed( m_currentsong.artist + " - " + m_currentsong.songtitle );
+    submit();
+}
+
 void AudioScrobbler::submit( void )
 {
-    if( intervalTimer->isActive() )
+    if( intervalTimer->isActive() || !m_handshake_done )
         return;
     
     m_cache_mutex.lock();
     if( m_subcache.getSubCount() )
         doRequest( m_postaddress, m_subcache.getPostData( m_username, md5Response() ) );
     else
+    {
         m_cache_mutex.unlock();
+    }
 }
 
 void AudioScrobbler::setSettings( void )
 {
+    if( hsTimer->isActive() ) hsTimer->stop();
+    if( intervalTimer->isActive() ) intervalTimer->stop();
+    
     m_handshake_done = false;
     
     m_username = KASConfig::username();
@@ -77,6 +155,8 @@ void AudioScrobbler::setSettings( void )
     setPassword( KASConfig::password() );
     
     m_cachesaveinterval = KASConfig::cachesaveinterval() * 60 * 1000;
+    
+    cacheTimer->changeInterval( m_cachesaveinterval );
     
     hsTimer->start( 5000, true );
 }
@@ -92,9 +172,9 @@ void AudioScrobbler::cacheSettings( QWidget *parent )
     connect( this, SIGNAL(statusMessage(const QString&)), statusPage, SLOT(statusMessage(const QString&)) );
     connect( this, SIGNAL(songPlayed(const QString&)), statusPage, SLOT(newSong(const QString&)) );
     
-    dialog->addPage( loginPage, "Login", "kaudioscrobbler" );
-    dialog->addPage( confWdg, "General", "kaudioscrobbler" );
-    dialog->addPage( statusPage, "Status", "kaudioscrobbler" );
+    dialog->addPage( loginPage, i18n("Login"), "kaudioscrobbler" );
+    dialog->addPage( confWdg, i18n("General"), "kaudioscrobbler" );
+    dialog->addPage( statusPage, i18n("Status"), "kaudioscrobbler" );
     
     connect( dialog, SIGNAL( settingsChanged() ), this, SLOT( setSettings() ) );
 }
@@ -122,7 +202,7 @@ void AudioScrobbler::gotResponse( QString response )
     m_job.unlock();
     kdDebug(100) << response << endl;
     
-    emit statusMessage( "got response" );
+    emit statusMessage( i18n("Got response") );
     
     parseResponse( response );
 }
@@ -135,7 +215,7 @@ inline QString AudioScrobbler::md5Response( void )
 void AudioScrobbler::setInterval( unsigned int interval )
 {
     // need to do something here?
-    m_interval = interval;
+    m_interval = interval * 1000;
 }
 
 void AudioScrobbler::parseResponse( QString response )
@@ -146,7 +226,7 @@ void AudioScrobbler::parseResponse( QString response )
     static QRegExp baduser( "^BADUSER\\s*(INTERVAL\\s+(\\d+))?", false );
     static QRegExp badauth( "^BADAUTH\\s*(INTERVAL\\s+(\\d+))?", false );
     static QRegExp ok( "^OK\\s*(INTERVAL\\s+(\\d+))?", false );
-    
+
     if( !m_handshake_done )
     {
         if( response.find( uptodate ) >= 0 )
@@ -158,7 +238,8 @@ void AudioScrobbler::parseResponse( QString response )
             if( re.count() > 3 )
                 setInterval( re[5].toUInt() );
             //hsTimer->stop();
-            emit statusMessage( "successful handshake" );
+            emit statusMessage( i18n("Successful handshake") );
+            if( !m_interval ) intervalTimer->start( 2 * 1000, true );
         }
         else if( response.find( update ) >= 0 )
         {
@@ -169,7 +250,8 @@ void AudioScrobbler::parseResponse( QString response )
             if( re.count() > 4 )
                 setInterval( re[6].toUInt() );
             //hsTimer->stop();
-            emit statusMessage( "update, url: " + re[1] );
+            emit statusMessage( i18n("Update needed: %1").arg( re[1] ) );
+            if( !m_interval ) intervalTimer->start( 2 * 1000, true );
         }
         else if( response.find( failed ) >= 0 )
         {
@@ -178,8 +260,8 @@ void AudioScrobbler::parseResponse( QString response )
             if( re.count() > 2 )
                 setInterval( re[3].toUInt() );
             
-            //hsTimer->changeInterval(60000);
-            emit statusMessage( "handshake failed: " + re[1] );
+            hsTimer->start( 10 * 60 * 1000, true );
+            emit statusMessage( i18n("Handshake failed: %1").arg( re[1] ) );
         }
         else if( response.find( baduser ) >= 0 )
         {
@@ -188,14 +270,13 @@ void AudioScrobbler::parseResponse( QString response )
                 setInterval( re[2].toUInt() );
             // let's do something to not submit again until the user is reset
             
-            //hsTimer->stop();
-            emit statusMessage( "error: bad username" );
+            intervalTimer->start( 24 * 60 * 60 * 1000, true );
+            emit statusMessage( i18n("Error: Bad username") );
         }
         else
         {
-            //hsTimer->changeInterval(60000);
-            emit statusMessage( "unparseable response from server" );
-            // let's do something here
+            emit statusMessage( i18n("Could not parse server response") );
+            hsTimer->start( 120000 );
         }
     }
     else // we've already handshaken
@@ -206,14 +287,14 @@ void AudioScrobbler::parseResponse( QString response )
             if( re.count() > 2 )
                 setInterval( re[3].toUInt() );
             
-            emit statusMessage( "submit failed: " + re[1] );
+            emit statusMessage( i18n("Submission failed: %1").arg( re[1] ) );
         }
         else if( response.find( badauth ) >= 0 )
         {
             QStringList re = badauth.capturedTexts();
             if( re.count() > 1 )
                 setInterval( re[2].toUInt() );
-            emit statusMessage( "bad password" );
+            emit statusMessage( i18n("Bad password") );
         }
         else if( response.find( ok ) >= 0 )
         {
@@ -222,28 +303,30 @@ void AudioScrobbler::parseResponse( QString response )
                 setInterval( re[2].toUInt() );
             m_subcache.clear();
             saveLockedCacheToDisk();
-            emit statusMessage( "submit succeeded" );
+            emit statusMessage( i18n("Submit succeeded") );
         }
         else
         {
-            emit statusMessage( "unparseable response from server" );
-            // let's do something here like set a delay or something
+            emit statusMessage( i18n("Can't parse server response") );
+            intervalTimer->start( 2 * 60 * 1000, true );
         }
         m_cache_mutex.unlock();
     }
-    if( m_interval ) intervalTimer->start( m_interval, true );
+    if( m_interval && !intervalTimer->isActive() ) intervalTimer->start( m_interval, true );
 }
 
 void AudioScrobbler::gotError( void )
 {
     m_job.unlock();
     
-    emit statusMessage( "error trying to talk to server" );
+    emit statusMessage( i18n("Error trying to talk to server") );
     
     if( m_handshake_done )
+    {
         m_cache_mutex.unlock();
+    }
     else
-        hsTimer->start( 60000, true );
+        hsTimer->start( 120000, true );
     
     //if( !m_handshake_done )
     //    hsTimer->changeInterval(60000);
@@ -252,7 +335,7 @@ void AudioScrobbler::gotError( void )
 void AudioScrobbler::saveCacheToDisk( void )
 {
     m_cache_mutex.lock();
-    m_cachesave->writeConfig();
+    saveLockedCacheToDisk();
     m_cache_mutex.unlock();
 }
 
@@ -273,30 +356,10 @@ void AudioScrobbler::doHandshake()
     if( !m_handshake_done || KASConfig::username() != m_username )
         doRequest( KURL(HANDSHAKE_ADDR + m_username) );
 }
-void AudioScrobbler::run_test2(void)
-{
-
-    //QString postdata = "u=" + m_username + "&s=" + md5Response() + 
-    //   "&a[0]=Stairwell&t[0]=Disaster&b[0]=The%20Sounds%20of%20Change&m[0]=&l[0]=251&i[0]=";
-    
-    //QDateTime cur = QDateTime::currentDateTime( Qt::UTC );
-    //QString tm = cur.toString( "yyyy-MM-dd hh:mm:ss" );
-
-    m_cache_mutex.lock();
-    
-    m_subcache.addSubmission( "Stairwell", "Disaster", "The Sounds of Change", "", 251/*, tm*/ );
-    
-    doRequest( m_postaddress, m_subcache.getPostData( m_username, md5Response() ) );
-    
-    emit songPlayed( "Stairwell - Disaster" );
-    //kdDebug(100) << m_subcache.getPostData( m_username, md5Response() ) << endl;
-    
-//    doRequest( KURL("http://post.audioscrobbler.com?hs=true&p=1.1&c=juk&v=0.0.1&u=progothdevtest") );
-}
 
 void AudioScrobbler::doRequest( const KURL &address, QString postdata )
 {
-    emit statusMessage( "firing request" );
+    emit statusMessage( i18n("Firing request") );
 
     m_job.lock();
     QCString tmp;
@@ -305,5 +368,4 @@ void AudioScrobbler::doRequest( const KURL &address, QString postdata )
     
     m_job_thread->setJob( address, tmp );
     m_job_thread->run/*start*/();
-    
 }
