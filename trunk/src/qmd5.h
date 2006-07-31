@@ -17,54 +17,30 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef QMD5_H
+#define QMD5_H
 
-#include "kaudioscrobbler.h"
+#include <qstring.h>
 
-#include <qlabel.h>
+#include "md5.h"
 
-#include <kmainwindow.h>
-#include <klocale.h>
-
-KAudioScrobbler::KAudioScrobbler()
-    : QVBox()//KMainWindow( 0, "KAudioScrobbler" )
+/**
+@author Steven Scott
+*/
+class QMD5
 {
-    // set the shell's ui resource file
-    //setXMLFile("kaudioscrobblerui.rc");
+public:
+    QMD5();
+    ~QMD5();
 
-    resize( 400, 400 );
-    
-    QPushButton *tester = new QPushButton( "Test", this, "testbtn" );    
-    
-    connect( tester, SIGNAL( clicked() ), this, SLOT(run_test()) );
-    
-    QPushButton *tester2 = new QPushButton( "Test2", this, "uaoe" );
-    connect( tester2, SIGNAL( clicked() ), this, SLOT( run_test2()) );
-    
-    QLabel *status = new QLabel( "STATUS", this, "statuslabel" );
-    
-    new QLabel( QString( "'': " ) + QMD5::MD5( "" ), this, "md5label" );
-    new QLabel( QString( "'a': " ) + QMD5::MD5( "a" ), this, "md52label" );
-    new QLabel( QString( "'abc': " ) + QMD5::MD5( "abc" ), this, "md53label" );
-    
-    scrob = new AudioScrobbler( "progothdevtest", "password" );
-    
-    connect( scrob, SIGNAL(statusMessage(const QString&)), status, SLOT(setText(const QString&)) );
-}
+    void add( QString in );
+    QString getMD5( void );
 
-KAudioScrobbler::~KAudioScrobbler()
-{
-    delete scrob;
-}
+    static QString MD5( QString in );
 
-void KAudioScrobbler::run_test( void )
-{
-    scrob->run_test();
-}
+private:
 
-void KAudioScrobbler::run_test2( void )
-{
-    scrob->run_test2();
-}
+    md5_state_t m_state;
+};
 
-
-#include "kaudioscrobbler.moc"
+#endif

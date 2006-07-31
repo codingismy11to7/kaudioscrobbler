@@ -17,54 +17,53 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef SCROBREQUESTTHREAD_H
+#define SCROBREQUESTTHREAD_H
 
-#include "kaudioscrobbler.h"
+#include <qobject.h>
+//#include <qthread.h>
+//#include <qwaitcondition.h>
+#include <qcstring.h>
+#include <qbuffer.h>
 
-#include <qlabel.h>
+#include <kurl.h>
+#include <kio/global.h>
+#include <kio/job.h>
 
-#include <kmainwindow.h>
-#include <klocale.h>
+#include <kdebug.h>
 
-KAudioScrobbler::KAudioScrobbler()
-    : QVBox()//KMainWindow( 0, "KAudioScrobbler" )
+/**
+@author Steven Scott
+*/
+class ScrobRequestThread : public QObject//, public QThread
 {
-    // set the shell's ui resource file
-    //setXMLFile("kaudioscrobblerui.rc");
+Q_OBJECT
+public:
+    ScrobRequestThread( /*QWaitCondition *job_done*/ );
 
-    resize( 400, 400 );
-    
-    QPushButton *tester = new QPushButton( "Test", this, "testbtn" );    
-    
-    connect( tester, SIGNAL( clicked() ), this, SLOT(run_test()) );
-    
-    QPushButton *tester2 = new QPushButton( "Test2", this, "uaoe" );
-    connect( tester2, SIGNAL( clicked() ), this, SLOT( run_test2()) );
-    
-    QLabel *status = new QLabel( "STATUS", this, "statuslabel" );
-    
-    new QLabel( QString( "'': " ) + QMD5::MD5( "" ), this, "md5label" );
-    new QLabel( QString( "'a': " ) + QMD5::MD5( "a" ), this, "md52label" );
-    new QLabel( QString( "'abc': " ) + QMD5::MD5( "abc" ), this, "md53label" );
-    
-    scrob = new AudioScrobbler( "progothdevtest", "password" );
-    
-    connect( scrob, SIGNAL(statusMessage(const QString&)), status, SLOT(setText(const QString&)) );
-}
+    ~ScrobRequestThread();
 
-KAudioScrobbler::~KAudioScrobbler()
-{
-    delete scrob;
-}
+    void run( void );
+    
+    void setJob( const KURL &url, const QByteArray &postdata );
+    
+    //QString result;
+    
+signals:
+    void response( QString );
+    void http_error();
+    
+private slots:
+    void transferResult( KIO::Job *job );
+    void dataReceived( KIO::Job *job, const QByteArray &data );
+    
+private:
+    //QWaitCondition *m_jobdone;
+    
+    QBuffer *m_tmpdata;
+    
+    KURL m_current_url;
+    QByteArray m_current_post;
+};
 
-void KAudioScrobbler::run_test( void )
-{
-    scrob->run_test();
-}
-
-void KAudioScrobbler::run_test2( void )
-{
-    scrob->run_test2();
-}
-
-
-#include "kaudioscrobbler.moc"
+#endif
