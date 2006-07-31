@@ -6,7 +6,7 @@ function hs_uptodate(){
 ?>
 UPTODATE
 57575757575757575757575757575757
-http://localhost/~progoth/v1.1.php
+http://progoth/~progoth/kas/v1.1.php
 INTERVAL 6
 <?
 }
@@ -15,7 +15,7 @@ function hs_update(){
 ?>
 UPDATE http://localhost
 57575757575757575757575757575757
-http://localhost/~progoth/v1.1.php
+http://progoth/~progoth/kas/v1.1.php
 INTERVAL 6
 <?
 }
