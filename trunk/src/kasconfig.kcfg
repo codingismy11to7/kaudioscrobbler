@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE kcfg SYSTEM "http://www.kde.org/standards/kcfg/1.0/kcfg.dtd">
+<kcfg> 
+  <kcfgfile name="kasconfig"/> 
+  <group name="kaudioscrobbler"> 
+    <entry name="username" type="String"> 
+      <label>AudioScrobbler username</label> 
+    </entry>
+    <entry name="password" type="String">
+      <label>AudioScrobbler password</label>
+    </entry>
+  </group> 
+</kcfg>

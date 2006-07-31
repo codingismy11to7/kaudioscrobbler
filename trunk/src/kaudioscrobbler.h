@@ -59,6 +59,8 @@ private slots:
 
     void run_test();
     void run_test2();
+    
+    void showSettings();
 };
 
 #endif // _KAUDIOSCROBBLER_H_

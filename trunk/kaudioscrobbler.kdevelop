@@ -22,7 +22,7 @@
       <mainprogram>src/kaudioscrobbler</mainprogram>
       <directoryradio>executable</directoryradio>
       <runarguments>
-        <kaudioscrobbler></kaudioscrobbler>
+        <kaudioscrobbler/>
       </runarguments>
     </run>
     <configurations>

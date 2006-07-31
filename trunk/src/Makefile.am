@@ -2,7 +2,7 @@
 INCLUDES = $(all_includes)
 
 # these are the headers for your project
-noinst_HEADERS = kaudioscrobbler.h md5.h audioscrobbler.h scrobrequestthread.h qmd5.h
+noinst_HEADERS = kaudioscrobbler.h md5.h audioscrobbler.h scrobrequestthread.h qmd5.h scrobstatus.h kascachelist.h
 
 # let automoc handle all of the meta source files (moc)
 METASOURCES = AUTO
@@ -20,7 +20,7 @@ KDE_ICON = kaudioscrobbler
 bin_PROGRAMS = kaudioscrobbler
 
 # the application source, library search path, and link libraries
-kaudioscrobbler_SOURCES = main.cpp kaudioscrobbler.cpp audioscrobbler.cpp md5.c qmd5.cpp scrobrequestthread.cpp
+kaudioscrobbler_SOURCES = main.cpp kaudioscrobbler.cpp audioscrobbler.cpp md5.c qmd5.cpp scrobrequestthread.cpp scrobsettingsdialog.ui kasconfig.cpp scrobstatusdialog.ui scrobstatus.cpp kascachelist.cpp
 kaudioscrobbler_LDFLAGS = $(KDE_RPATH) $(all_libraries)
 kaudioscrobbler_LDADD = $(LIB_KIO) $(LIB_KDEUI)
 

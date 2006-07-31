@@ -17,53 +17,28 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef SCROBREQUESTTHREAD_H
-#define SCROBREQUESTTHREAD_H
+#ifndef KASCACHELIST_H
+#define KASCACHELIST_H
 
-#include <qobject.h>
-//#include <qthread.h>
-//#include <qwaitcondition.h>
-#include <qcstring.h>
-#include <qbuffer.h>
-
-#include <kurl.h>
-#include <kio/global.h>
-#include <kio/job.h>
-
-#include <kdebug.h>
+#include <qstringlist.h>
 
 /**
 @author Steven Scott
 */
-class ScrobRequestThread : public QObject//, public QThread
+class KASCacheList : public QStringList
 {
-Q_OBJECT
+//Q_OBJECT
 public:
-    ScrobRequestThread(  );
+    //KASCacheList(QObject *parent = 0, const char *name = 0);
 
-    ~ScrobRequestThread();
+    //~KASCacheList();
 
-    void run( void );
+    int getSubCount( void );
     
-    void setJob( const KURL &url, const QByteArray &postdata );
-    
-    //QString result;
-    
-signals:
-    void response( QString );
-    void http_error();
-    
-private slots:
-    void transferResult( KIO::Job *job );
-    void dataReceived( KIO::Job *job, const QByteArray &data );
-    
-private:
-    //QWaitCondition *m_jobdone;
-    
-    QBuffer *m_tmpdata;
-    
-    KURL m_current_url;
-    QByteArray m_current_post;
+    void addSubmission( QString artist, QString songtitle, QString album, QString mbid, int seconds, QString time );
+
+    QCString getPostData( QString username, QString md5response ); 
+        
 };
 
 #endif
