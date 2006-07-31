@@ -35,7 +35,7 @@
 #include "kascachelist.h"
 
 //#define HANDSHAKE_ADDR "http://post.audioscrobbler.com?hs=true&p=1.1&c=juk&v=0.0.1&u="
-#define HANDSHAKE_ADDR "http://localhost/~progoth/?hs=true&p=1.1&c=juk&v=0.0.1&u="
+#define HANDSHAKE_ADDR "http://progoth/~progoth/kas/?hs=true&p=1.1&c=juk&v=0.0.1&u="
 
 /**
 @author Steven Scott
