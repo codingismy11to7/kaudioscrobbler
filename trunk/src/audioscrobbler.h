@@ -31,18 +31,8 @@
 #include <kdebug.h>
 #include <klocale.h>
 
-#include "qmd5.h"
 #include "scrobrequestthread.h"
 #include "kascachelist.h"
-
-#define MIN_SONG_LEN 30
-#define MAX_SONG_LEN (30 * 60)
-#define MIN_PLAY_TIME 240
-
-#define MIN(a,b) ((a)<(b))?(a):(b)
-
-#define HANDSHAKE_ADDR "http://post.audioscrobbler.com?hs=true&p=1.1&c=juk&v=0.0.1&u="
-//#define HANDSHAKE_ADDR "http://localhost/~progoth/?hs=true&p=1.1&c=juk&v=0.0.1&u="
 
 class KConfigSkeleton;
 
@@ -53,10 +43,14 @@ class AudioScrobbler : public QObject
 {
 Q_OBJECT
 public:
-    AudioScrobbler( QWidget *parent );
+    AudioScrobbler( QWidget *parent, const QString &clientName = "juk", const QString &clientVersion = "0.0.1" );
 
     ~AudioScrobbler();
 
+    QString handshakeAddress() const
+//    { return QString("http://post.audioscrobbler.com?hs=true&p=1.1&c=%1&v=%2&u=").arg(m_clientName).arg(m_clientVersion); }
+    { return QString("http://localhost/~progoth/?hs=true&p=1.1&c=%1&v=%2&u=").arg(m_clientName).arg(m_clientVersion); }
+    
 signals:
     void statusMessage( const QString& );
     void songPlayed( const QString& );
@@ -64,44 +58,47 @@ signals:
 public slots:
     void play( const QString &artist, const QString &songtitle, const QString &album,
                const QString &musicbrainzid, unsigned int length );
-    void pause( void );
-    void unpause( void );
-    void seek( void );
-    void stop( void );
+    void pause();
+    void unpause();
+    void seek();
+    void stop();
 
     void doHandshake();
-    void gotResponse( QString response );
-    void gotError( void );
+    void gotResponse( const QString &response );
+    void gotError();
     
     void setInterval( unsigned int interval );
 
-    void showSettings();
+    void showSettings() const;
     
-    void setSettings( void );
+    void setSettings();
 
 protected slots:        
-    void saveCacheToDisk( void );
-    void saveLockedCacheToDisk( void );
-    void loadCacheFromDisk( void );
+    void saveCacheToDisk();
+    void saveLockedCacheToDisk();
+    void loadCacheFromDisk();
     
-    void submit( void );
-    void newSong( void );
+    void submit();
+    void newSong();
     
 protected:
-    /*QString*/void doRequest( const KURL &address, QString postdata = QString::null );
+    void doRequest( const KURL &address, const QString &postdata = QString::null );
     
-    void cacheSettings( QWidget *parent );
+    void cacheSettings( QWidget *parent ) const;
     
-    void parseResponse( QString response );
+    void parseResponse( const QString &response );
     
-    void setPassword( QString password );
+    void setPassword( const QString &password );
     
-    inline QString md5Response( void );
+    inline QString md5Response() const;
     
     KASCacheList m_subcache;
     QMutex m_cache_mutex;
     KConfigSkeleton *m_cachesave;
     QTimer *cacheTimer;
+    
+    QString m_clientName;
+    QString m_clientVersion;
     
     QString m_postaddress;
     QString m_challenge;
@@ -124,6 +121,10 @@ protected:
     QDateTime m_playtime;
     unsigned int m_remainingtime;
     bool m_songplaying;
+
+    static unsigned int MIN_SONG_LENGTH;
+    static unsigned int MAX_SONG_LENGTH;
+    static unsigned int MIN_PLAY_TIME;
 };
 
 #endif
