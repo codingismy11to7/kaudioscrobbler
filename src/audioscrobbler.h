@@ -41,8 +41,8 @@
 
 #define MIN(a,b) ((a)<(b))?(a):(b)
 
-//#define HANDSHAKE_ADDR "http://post.audioscrobbler.com?hs=true&p=1.1&c=juk&v=0.0.1&u="
-#define HANDSHAKE_ADDR "http://localhost/~progoth/?hs=true&p=1.1&c=juk&v=0.0.1&u="
+#define HANDSHAKE_ADDR "http://post.audioscrobbler.com?hs=true&p=1.1&c=juk&v=0.0.1&u="
+//#define HANDSHAKE_ADDR "http://localhost/~progoth/?hs=true&p=1.1&c=juk&v=0.0.1&u="
 
 class KConfigSkeleton;
 
