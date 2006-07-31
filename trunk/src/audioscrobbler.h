@@ -48,8 +48,8 @@ public:
     ~AudioScrobbler();
 
     QString handshakeAddress() const
-//    { return QString("http://post.audioscrobbler.com?hs=true&p=1.1&c=%1&v=%2&u=").arg(m_clientName).arg(m_clientVersion); }
-    { return QString("http://localhost/~progoth/?hs=true&p=1.1&c=%1&v=%2&u=").arg(m_clientName).arg(m_clientVersion); }
+    { return QString("http://post.audioscrobbler.com?hs=true&p=1.1&c=%1&v=%2&u=").arg(m_clientName).arg(m_clientVersion); }
+//    { return QString("http://localhost/~progoth/?hs=true&p=1.1&c=%1&v=%2&u=").arg(m_clientName).arg(m_clientVersion); }
     
 signals:
     void statusMessage( const QString& );
