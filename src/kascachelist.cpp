@@ -37,7 +37,7 @@
 /**
  * gets the number of cached audioscrobbler entries
  */
-int KASCacheList::getSubCount( void )
+int KASCacheList::submissionCount( void ) const
 {
     return count() / 6;
 }
@@ -47,7 +47,8 @@ void KASCacheList::addSubmission( const ScrobSongData &in )
     addSubmission( in.artist, in.songtitle, in.album, in.mbid, in.length );
 }
 
-void KASCacheList::addSubmission( QString artist, QString songtitle, QString album, QString mbid, int seconds )
+void KASCacheList::addSubmission( const QString &artist, const QString &songtitle, const QString &album,
+                                  const QString &mbid, int seconds )
 {
     append( KURL::encode_string_no_slash( artist ).utf8() );
     append( KURL::encode_string_no_slash( songtitle ).utf8() );
@@ -61,13 +62,11 @@ void KASCacheList::addSubmission( QString artist, QString songtitle, QString alb
     append( KURL::encode_string_no_slash( time ) );
 }
 
-QCString KASCacheList::getPostData( QString username, QString md5response )
+QCString KASCacheList::postData( const QString &username, const QString &md5response ) const
 {
-    username = KURL::encode_string_no_slash( username );
-    
     QString ret;
-    ret += "u=" + username + "&s=" + md5response;
-    int total = getSubCount();
+    ret += "u=" + KURL::encode_string_no_slash( username ) + "&s=" + md5response;
+    int total = submissionCount();
     for( int i = 0; i < total; i++ )
     {
         QString n = QString::number( i );

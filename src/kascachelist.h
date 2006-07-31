@@ -41,12 +41,13 @@ public:
 
     //~KASCacheList();
 
-    int getSubCount( void );
+    int submissionCount( void ) const;
     
     void addSubmission( const ScrobSongData & );
-    void addSubmission( QString artist, QString songtitle, QString album, QString mbid, int seconds/*, QString time*/ );
+    void addSubmission( const QString &artist, const QString &songtitle, const QString &album,
+                        const QString &mbid, int seconds );
 
-    QCString getPostData( QString username, QString md5response ); 
+    QCString postData( const QString &username, const QString &md5response ) const; 
         
 };
 

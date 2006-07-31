@@ -31,11 +31,11 @@ Q_OBJECT
 public:
     ScrobStatus(QWidget *parent = 0, const char *name = 0);
 
-    ~ScrobStatus();
+    //~ScrobStatus();
 
 public slots:
-    void statusMessage( const QString& );
-    void newSong( const QString& );    
+    void statusMessage( const QString& ) const;
+    void newSong( const QString& ) const;    
 };
 
 #endif

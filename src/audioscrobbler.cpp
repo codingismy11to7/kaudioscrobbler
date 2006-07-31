@@ -23,11 +23,17 @@
 #include "scrobstatus.h"
 #include "kasconfig.h"
 
+#include <kmdcodec.h>
 #include <kconfigdialog.h>
 #include <kconfigskeleton.h>
 
-AudioScrobbler::AudioScrobbler( QWidget *parent )
-  : QObject(), m_postaddress(QString::null), m_challenge(QString::null), m_handshake_done(false),
+unsigned int AudioScrobbler::MIN_SONG_LENGTH =      30;
+unsigned int AudioScrobbler::MAX_SONG_LENGTH = 30 * 60;
+unsigned int AudioScrobbler::MIN_PLAY_TIME   =     240;
+
+AudioScrobbler::AudioScrobbler( QWidget *parent, const QString &clientName, const QString &clientVersion )
+  : QObject(), m_clientName(clientName), m_clientVersion(clientVersion),
+    m_postaddress(QString::null), m_challenge(QString::null), m_handshake_done(false),
     m_interval(0), m_cachesaveinterval(300000), m_songplaying(false)
 {
     m_job_thread = new ScrobRequestThread( );
@@ -44,8 +50,8 @@ AudioScrobbler::AudioScrobbler( QWidget *parent )
     connect( cacheTimer, SIGNAL(timeout()), this, SLOT(saveCacheToDisk()) );
     cacheTimer->start( m_cachesaveinterval );
     
-    connect( m_job_thread, SIGNAL(response(QString)), this, SLOT(gotResponse(QString)) );
-    connect( m_job_thread, SIGNAL(http_error()), this, SLOT(gotError(void )) );
+    connect( m_job_thread, SIGNAL(response(const QString&)), this, SLOT(gotResponse(const QString&)) );
+    connect( m_job_thread, SIGNAL(http_error()), this, SLOT(gotError()) );
     
     songPlayTimer = new QTimer( this );
     connect( songPlayTimer, SIGNAL(timeout()), this, SLOT(newSong()) );
@@ -64,9 +70,9 @@ void AudioScrobbler::play( const QString &artist, const QString &songtitle, cons
 {
     if( songPlayTimer->isActive() ) songPlayTimer->stop();
     
-    emit statusMessage( tr2i18n( "Playing" ) );
+    emit statusMessage( i18n( "Playing" ) );
     
-    if( length < MIN_SONG_LEN || length > MAX_SONG_LEN ) return;
+    if( length < MIN_SONG_LENGTH || length > MAX_SONG_LENGTH ) return;
     
     QString art = artist;
     QString st = songtitle;
@@ -89,11 +95,11 @@ void AudioScrobbler::play( const QString &artist, const QString &songtitle, cons
     
     m_playtime = QDateTime::currentDateTime();
     m_songplaying = true;
-    m_remainingtime = MIN( 1 + length / 2, MIN_PLAY_TIME );
+    m_remainingtime = ( (1+length/2) < MIN_PLAY_TIME) ? 1+length/2 : MIN_PLAY_TIME;
     songPlayTimer->start( m_remainingtime * 1000, true );
 }
 
-void AudioScrobbler::pause( void )
+void AudioScrobbler::pause()
 {
     if( !songPlayTimer->isActive() || !m_songplaying ) return;
     songPlayTimer->stop();
@@ -105,7 +111,7 @@ void AudioScrobbler::pause( void )
     m_songplaying = false;
 }
 
-void AudioScrobbler::unpause( void )
+void AudioScrobbler::unpause()
 {
     if( songPlayTimer->isActive() || m_songplaying ) return;
     m_songplaying = true;
@@ -115,7 +121,7 @@ void AudioScrobbler::unpause( void )
     emit statusMessage( i18n( "Playing" ) );
 }
 
-void AudioScrobbler::seek( void )
+void AudioScrobbler::seek()
 {
     if( songPlayTimer->isActive() )
     {
@@ -124,7 +130,7 @@ void AudioScrobbler::seek( void )
     }
 }
 
-void AudioScrobbler::stop( void )
+void AudioScrobbler::stop()
 {
     if( songPlayTimer->isActive() )
         songPlayTimer->stop();
@@ -132,7 +138,7 @@ void AudioScrobbler::stop( void )
     emit statusMessage( i18n( "Stopped" ) );
 }
 
-void AudioScrobbler::newSong( void )
+void AudioScrobbler::newSong()
 {
     m_cache_mutex.lock();
     m_subcache.addSubmission( m_currentsong );
@@ -142,21 +148,21 @@ void AudioScrobbler::newSong( void )
     submit();
 }
 
-void AudioScrobbler::submit( void )
+void AudioScrobbler::submit()
 {
     if( intervalTimer->isActive() || !m_handshake_done )
         return;
     
     m_cache_mutex.lock();
-    if( m_subcache.getSubCount() )
-        doRequest( m_postaddress, m_subcache.getPostData( m_username, md5Response() ) );
+    if( m_subcache.submissionCount() )
+        doRequest( m_postaddress, m_subcache.postData( m_username, md5Response() ) );
     else
     {
         m_cache_mutex.unlock();
     }
 }
 
-void AudioScrobbler::setSettings( void )
+void AudioScrobbler::setSettings()
 {
     if( hsTimer->isActive() ) hsTimer->stop();
     if( intervalTimer->isActive() ) intervalTimer->stop();
@@ -174,7 +180,7 @@ void AudioScrobbler::setSettings( void )
     hsTimer->start( 5000, true );
 }
 
-void AudioScrobbler::cacheSettings( QWidget *parent )
+void AudioScrobbler::cacheSettings( QWidget *parent ) const
 {
     KConfigDialog *dialog = new KConfigDialog( parent, "settings", KASConfig::self() );
     
@@ -192,7 +198,7 @@ void AudioScrobbler::cacheSettings( QWidget *parent )
     connect( dialog, SIGNAL( settingsChanged() ), this, SLOT( setSettings() ) );
 }
 
-void AudioScrobbler::showSettings()
+void AudioScrobbler::showSettings() const
 {
     KConfigDialog::showDialog( "settings" );
 }
@@ -205,12 +211,13 @@ AudioScrobbler::~AudioScrobbler()
     delete m_job_thread;
 }
 
-void AudioScrobbler::setPassword( QString password )
+void AudioScrobbler::setPassword( const QString &password )
 {
-    m_password = QMD5::MD5( password );
+    KMD5 m( password.utf8() );
+    m_password = m.hexDigest();
 }
 
-void AudioScrobbler::gotResponse( QString response )
+void AudioScrobbler::gotResponse( const QString &response )
 {
     m_job.unlock();
     kdDebug(100) << response << endl;
@@ -220,9 +227,10 @@ void AudioScrobbler::gotResponse( QString response )
     parseResponse( response );
 }
 
-inline QString AudioScrobbler::md5Response( void )
+inline QString AudioScrobbler::md5Response() const
 {
-    return QMD5::MD5( m_password + m_challenge );
+    KMD5 m( (m_password + m_challenge).utf8() );
+    return m.hexDigest();
 }
 
 void AudioScrobbler::setInterval( unsigned int interval )
@@ -231,7 +239,7 @@ void AudioScrobbler::setInterval( unsigned int interval )
     m_interval = interval * 1000;
 }
 
-void AudioScrobbler::parseResponse( QString response )
+void AudioScrobbler::parseResponse( const QString &response )
 {
     static QRegExp uptodate( "^UPTODATE\\s*(\\S{32})\\s*(\\S+)\\s*(INTERVAL\\s+(\\d+))?", false );
     static QRegExp update( "^UPDATE\\s+(\\S+)\\s*(\\S{32})\\s*(\\S+)\\s*(INTERVAL\\s+(\\d+))?", false );
@@ -328,7 +336,7 @@ void AudioScrobbler::parseResponse( QString response )
     if( m_interval && !intervalTimer->isActive() ) intervalTimer->start( m_interval, true );
 }
 
-void AudioScrobbler::gotError( void )
+void AudioScrobbler::gotError()
 {
     m_job.unlock();
     
@@ -345,19 +353,19 @@ void AudioScrobbler::gotError( void )
     //    hsTimer->changeInterval(60000);
 }
 
-void AudioScrobbler::saveCacheToDisk( void )
+void AudioScrobbler::saveCacheToDisk()
 {
     m_cache_mutex.lock();
     saveLockedCacheToDisk();
     m_cache_mutex.unlock();
 }
 
-void AudioScrobbler::saveLockedCacheToDisk( void )
+void AudioScrobbler::saveLockedCacheToDisk()
 {
     m_cachesave->writeConfig();
 }
 
-void AudioScrobbler::loadCacheFromDisk( void )
+void AudioScrobbler::loadCacheFromDisk()
 {
     m_cache_mutex.lock();
     m_cachesave->readConfig();
@@ -367,10 +375,10 @@ void AudioScrobbler::loadCacheFromDisk( void )
 void AudioScrobbler::doHandshake()
 {
     if( !m_handshake_done || KASConfig::username() != m_username )
-        doRequest( KURL(HANDSHAKE_ADDR + m_username) );
+        doRequest( KURL(handshakeAddress() + m_username) );
 }
 
-void AudioScrobbler::doRequest( const KURL &address, QString postdata )
+void AudioScrobbler::doRequest( const KURL &address, const QString &postdata )
 {
     emit statusMessage( i18n("Firing request") );
 

@@ -50,7 +50,7 @@ public:
     //QString result;
     
 signals:
-    void response( QString );
+    void response( const QString& );
     void http_error();
     
 private slots:

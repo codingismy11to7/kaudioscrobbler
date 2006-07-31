@@ -31,16 +31,16 @@ ScrobStatus::ScrobStatus(QWidget *parent, const char *name)
 }
 
 
-ScrobStatus::~ScrobStatus()
+/*ScrobStatus::~ScrobStatus()
 {
-}
+}*/
 
-void ScrobStatus::statusMessage( const QString &in )
+void ScrobStatus::statusMessage( const QString &in ) const
 {
     statusLabel->setText( in );
 }
 
-void ScrobStatus::newSong( const QString &in )
+void ScrobStatus::newSong( const QString &in ) const
 {
     songsPlayed->append( in );
     songsPlayed->scrollToBottom();
