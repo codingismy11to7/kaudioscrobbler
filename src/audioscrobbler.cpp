@@ -23,6 +23,7 @@
 #include "kasconfig.h"
 
 #include <kconfigdialog.h>
+#include <kconfigskeleton.h>
 
 AudioScrobbler::AudioScrobbler( QWidget *parent )
   : QObject(), m_postaddress(QString::null), m_challenge(QString::null), m_handshake_done(false),
@@ -32,7 +33,15 @@ AudioScrobbler::AudioScrobbler( QWidget *parent )
     
     cacheSettings( parent );
     
+    m_cachesave = new KConfigSkeleton( "kaudioscrobblercache" );
+    m_cachesave->setCurrentGroup( "main" );
+    m_cachesave->addItemStringList( "cache", m_subcache );
+    
     loadCacheFromDisk();
+    
+    cacheTimer = new QTimer( this );
+    connect( cacheTimer, SIGNAL(timeout()), this, SLOT(saveCacheToDisk()) );
+    cacheTimer->start( 300000, true );
     
     connect( m_job_thread, SIGNAL(response(QString)), this, SLOT(gotResponse(QString)) );
     connect( m_job_thread, SIGNAL(http_error()), this, SLOT(gotError(void )) );
@@ -222,12 +231,16 @@ void AudioScrobbler::gotError( void )
 
 void AudioScrobbler::saveCacheToDisk( void )
 {
-    //write me
+    m_cache_mutex.lock();
+    m_cachesave->writeConfig();
+    m_cache_mutex.unlock();
 }
 
 void AudioScrobbler::loadCacheFromDisk( void )
 {
-    //write me
+    m_cache_mutex.lock();
+    m_cachesave->readConfig();
+    m_cache_mutex.unlock();
 }
 
 void AudioScrobbler::doHandshake()
