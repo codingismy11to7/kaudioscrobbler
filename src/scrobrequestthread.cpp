@@ -50,6 +50,7 @@ void ScrobRequestThread::transferResult( KIO::Job *job )
     {
         //j->showErrorDialog(); // prolly bad
         emit http_error();
+        delete m_tmpdata;
         return;
     }   
     
@@ -67,7 +68,7 @@ void ScrobRequestThread::run( void )
     //add error checking!
     m_tmpdata = new QBuffer();
     m_tmpdata->open( IO_WriteOnly );
-
+    
     KIO::TransferJob *job;
     if( m_current_post.isEmpty() )
         job = KIO::get( m_current_url, true, false );
@@ -79,7 +80,6 @@ void ScrobRequestThread::run( void )
     connect( job, SIGNAL(result(KIO::Job*)), this, SLOT(transferResult(KIO::Job*)) );
     connect( job, SIGNAL(data(KIO::Job*,const QByteArray&)),
              this, SLOT(dataReceived(KIO::Job*, const QByteArray& )) );
-    
 }
 
 #include "scrobrequestthread.moc"

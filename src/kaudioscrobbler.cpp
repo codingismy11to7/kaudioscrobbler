@@ -34,12 +34,20 @@ KAudioScrobbler::KAudioScrobbler()
 
     resize( 400, 200 );
     
-    QPushButton *tester = new QPushButton( "Test", this, "testbtn" );    
+    scrob = new AudioScrobbler( this );
+    
+    QPushButton *tester = new QPushButton( "Play", this, "testbtn" );    
     
     connect( tester, SIGNAL( clicked() ), this, SLOT(run_test()) );
     
-    QPushButton *tester2 = new QPushButton( "Test2", this, "uaoe" );
-    connect( tester2, SIGNAL( clicked() ), this, SLOT( run_test2()) );
+    QPushButton *tester2 = new QPushButton( "Pause", this, "uaoe" );
+    connect( tester2, SIGNAL( clicked() ), scrob, SLOT( pause()) );
+    
+    QPushButton *tester3 = new QPushButton( "Unpause", this, "uheot" );
+    connect( tester3, SIGNAL( clicked() ), scrob, SLOT( unpause() ) );
+    
+    QPushButton *tester4 = new QPushButton( "Stop", this, "ihtaonu" );
+    connect( tester4, SIGNAL( clicked() ), scrob, SLOT( stop() ) );
     
     QPushButton *settings = new QPushButton( "Settings", this, "sett" );
     connect( settings, SIGNAL( clicked() ), this, SLOT( showSettings() ) );
@@ -49,8 +57,6 @@ KAudioScrobbler::KAudioScrobbler()
     /*new QLabel( QString( "'': " ) + QMD5::MD5( "" ), this, "md5label" );
     new QLabel( QString( "'a': " ) + QMD5::MD5( "a" ), this, "md52label" );
     new QLabel( QString( "'abc': " ) + QMD5::MD5( "abc" ), this, "md53label" );*/
-    
-    scrob = new AudioScrobbler( this );
     
     connect( scrob, SIGNAL(statusMessage(const QString&)), status, SLOT(setText(const QString&)) );
 }
@@ -67,12 +73,12 @@ void KAudioScrobbler::showSettings( void )
 
 void KAudioScrobbler::run_test( void )
 {
-    //die!scrob->run_test();
+    scrob->play( "Stairwell", "Disaster", "The Sounds of Change", "", 251 );
 }
 
 void KAudioScrobbler::run_test2( void )
 {
-    scrob->run_test2();
+    scrob->stop();
 }
 
 
