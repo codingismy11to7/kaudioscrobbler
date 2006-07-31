@@ -68,8 +68,21 @@ void AudioScrobbler::play( const QString &artist, const QString &songtitle, cons
     
     if( length < MIN_SONG_LEN || length > MAX_SONG_LEN ) return;
     
-    m_currentsong.artist = artist;
-    m_currentsong.songtitle = songtitle;
+    QString art = artist;
+    QString st = songtitle;
+    
+    if( (artist.isEmpty() || artist.find( QString("various"),0,FALSE) >= 0) && songtitle.find( "/" ) >= 0 )
+    {
+        QRegExp re( "([^/]+)\\s*/\\s*(.+)" );
+        if( songtitle.find( re ) >= 0 )
+        {
+            art = re.capturedTexts()[1].stripWhiteSpace();
+            st = re.capturedTexts()[2].stripWhiteSpace();
+        }
+    }
+    
+    m_currentsong.artist = art;
+    m_currentsong.songtitle = st;
     m_currentsong.album = album;
     m_currentsong.mbid = musicbrainzid;
     m_currentsong.length = length;
