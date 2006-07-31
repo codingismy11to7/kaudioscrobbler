@@ -9,5 +9,9 @@
     <entry name="password" type="String">
       <label>AudioScrobbler password</label>
     </entry>
+    <entry name="cachesaveinterval" type="Int">
+      <label>Cache Save Interval</label>
+      <default>5</default>
+    </entry>
   </group> 
 </kcfg>

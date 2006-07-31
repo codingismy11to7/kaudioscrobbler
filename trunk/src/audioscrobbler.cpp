@@ -19,6 +19,7 @@
  ***************************************************************************/
 #include "audioscrobbler.h"
 #include "scrobsettingsdialog.h"
+#include "scroblogindialog.h"
 #include "scrobstatus.h"
 #include "kasconfig.h"
 
@@ -27,7 +28,7 @@
 
 AudioScrobbler::AudioScrobbler( QWidget *parent )
   : QObject(), m_postaddress(QString::null), m_challenge(QString::null), m_handshake_done(false),
-    m_interval(0)
+    m_interval(0), m_cachesaveinterval(300000)
 {
     m_job_thread = new ScrobRequestThread( );
     
@@ -41,16 +42,30 @@ AudioScrobbler::AudioScrobbler( QWidget *parent )
     
     cacheTimer = new QTimer( this );
     connect( cacheTimer, SIGNAL(timeout()), this, SLOT(saveCacheToDisk()) );
-    cacheTimer->start( 300000, true );
+    cacheTimer->start( m_cachesaveinterval );
     
     connect( m_job_thread, SIGNAL(response(QString)), this, SLOT(gotResponse(QString)) );
     connect( m_job_thread, SIGNAL(http_error()), this, SLOT(gotError(void )) );
     
     hsTimer = new QTimer( this );
     connect( hsTimer, SIGNAL(timeout()), this, SLOT(doHandshake()) );
-    /*hsTimer->start( 1000, true );*/
-    
+
+    intervalTimer = new QTimer( this );
+    connect( intervalTimer, SIGNAL(timeout()), this, SLOT(submit()) );
+        
     setSettings();
+}
+
+void AudioScrobbler::submit( void )
+{
+    if( intervalTimer->isActive() )
+        return;
+    
+    m_cache_mutex.lock();
+    if( m_subcache.getSubCount() )
+        doRequest( m_postaddress, m_subcache.getPostData( m_username, md5Response() ) );
+    else
+        m_cache_mutex.unlock();
 }
 
 void AudioScrobbler::setSettings( void )
@@ -58,23 +73,27 @@ void AudioScrobbler::setSettings( void )
     m_handshake_done = false;
     
     m_username = KASConfig::username();
+    
     setPassword( KASConfig::password() );
     
-    //hsTimer->changeInterval(1000);
+    m_cachesaveinterval = KASConfig::cachesaveinterval() * 60 * 1000;
+    
     hsTimer->start( 5000, true );
-    //doHandshake();
 }
 
 void AudioScrobbler::cacheSettings( QWidget *parent )
 {
     KConfigDialog *dialog = new KConfigDialog( parent, "settings", KASConfig::self() );
     
+    ScrobLoginDialog *loginPage = new ScrobLoginDialog( 0, "AudioScrobbler Login" );
     ScrobSettingsDialog *confWdg = new ScrobSettingsDialog( 0, "AudioScrobbler Settings" );
     ScrobStatus *statusPage = new ScrobStatus( 0, "AudioScrobbler Status" );
     
     connect( this, SIGNAL(statusMessage(const QString&)), statusPage, SLOT(statusMessage(const QString&)) );
+    connect( this, SIGNAL(songPlayed(const QString&)), statusPage, SLOT(newSong(const QString&)) );
     
-    dialog->addPage( confWdg, "Login", "kaudioscrobbler" );
+    dialog->addPage( loginPage, "Login", "kaudioscrobbler" );
+    dialog->addPage( confWdg, "General", "kaudioscrobbler" );
     dialog->addPage( statusPage, "Status", "kaudioscrobbler" );
     
     connect( dialog, SIGNAL( settingsChanged() ), this, SLOT( setSettings() ) );
@@ -202,7 +221,7 @@ void AudioScrobbler::parseResponse( QString response )
             if( re.count() > 1 )
                 setInterval( re[2].toUInt() );
             m_subcache.clear();
-            saveCacheToDisk();
+            saveLockedCacheToDisk();
             emit statusMessage( "submit succeeded" );
         }
         else
@@ -212,6 +231,7 @@ void AudioScrobbler::parseResponse( QString response )
         }
         m_cache_mutex.unlock();
     }
+    if( m_interval ) intervalTimer->start( m_interval, true );
 }
 
 void AudioScrobbler::gotError( void )
@@ -236,6 +256,11 @@ void AudioScrobbler::saveCacheToDisk( void )
     m_cache_mutex.unlock();
 }
 
+void AudioScrobbler::saveLockedCacheToDisk( void )
+{
+    m_cachesave->writeConfig();
+}
+
 void AudioScrobbler::loadCacheFromDisk( void )
 {
     m_cache_mutex.lock();
@@ -254,15 +279,16 @@ void AudioScrobbler::run_test2(void)
     //QString postdata = "u=" + m_username + "&s=" + md5Response() + 
     //   "&a[0]=Stairwell&t[0]=Disaster&b[0]=The%20Sounds%20of%20Change&m[0]=&l[0]=251&i[0]=";
     
-    QDateTime cur = QDateTime::currentDateTime( Qt::UTC );
-    QString tm = cur.toString( "yyyy-MM-dd hh:mm:ss" );
+    //QDateTime cur = QDateTime::currentDateTime( Qt::UTC );
+    //QString tm = cur.toString( "yyyy-MM-dd hh:mm:ss" );
 
     m_cache_mutex.lock();
     
-    m_subcache.addSubmission( "Stairwell", "Disaster", "The Sounds of Change", "", 251, tm );
-
+    m_subcache.addSubmission( "Stairwell", "Disaster", "The Sounds of Change", "", 251/*, tm*/ );
     
     doRequest( m_postaddress, m_subcache.getPostData( m_username, md5Response() ) );
+    
+    emit songPlayed( "Stairwell - Disaster" );
     //kdDebug(100) << m_subcache.getPostData( m_username, md5Response() ) << endl;
     
 //    doRequest( KURL("http://post.audioscrobbler.com?hs=true&p=1.1&c=juk&v=0.0.1&u=progothdevtest") );

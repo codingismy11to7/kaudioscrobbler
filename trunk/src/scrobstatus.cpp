@@ -21,6 +21,8 @@
 
 #include <qlabel.h>
 
+#include <qtextedit.h>
+
 #include <kdebug.h>
 
 ScrobStatus::ScrobStatus(QWidget *parent, const char *name)
@@ -36,6 +38,12 @@ ScrobStatus::~ScrobStatus()
 void ScrobStatus::statusMessage( const QString &in )
 {
     statusLabel->setText( in );
+}
+
+void ScrobStatus::newSong( const QString &in )
+{
+    songsPlayed->append( in );
+    songsPlayed->scrollToBottom();
 }
 
 #include "scrobstatus.moc"

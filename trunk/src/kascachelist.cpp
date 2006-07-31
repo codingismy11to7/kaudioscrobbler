@@ -19,6 +19,9 @@
  ***************************************************************************/
 #include "kascachelist.h"
 
+#include <qstring.h>
+#include <qdatetime.h>
+
 #include <kurl.h>
 
 /*KASCacheList::KASCacheList(QObject *parent, const char *name)
@@ -39,13 +42,17 @@ int KASCacheList::getSubCount( void )
     return count() / 6;
 }
 
-void KASCacheList::addSubmission( QString artist, QString songtitle, QString album, QString mbid, int seconds, QString time )
+void KASCacheList::addSubmission( QString artist, QString songtitle, QString album, QString mbid, int seconds/*, QString time*/ )
 {
     append( KURL::encode_string_no_slash( artist ).utf8() );
     append( KURL::encode_string_no_slash( songtitle ).utf8() );
     append( KURL::encode_string_no_slash( album ).utf8() );
     append( mbid );
     append( QString::number( seconds ) );
+    
+    QDateTime cur = QDateTime::currentDateTime( Qt::UTC );
+    QString time = cur.toString( "yyyy-MM-dd hh:mm:ss" );
+    
     append( KURL::encode_string_no_slash( time ) );
 }
 

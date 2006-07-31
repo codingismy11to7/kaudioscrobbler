@@ -1,19 +1,19 @@
 <!DOCTYPE UI><UI version="3.2" stdsetdef="1">
-<class>ScrobSettingsDialog</class>
+<class>ScrobLoginDialog</class>
 <widget class="QDialog">
     <property name="name">
-        <cstring>ScrobSettingsDialog</cstring>
+        <cstring>ScrobLoginDialog</cstring>
     </property>
     <property name="geometry">
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>376</width>
-            <height>196</height>
+            <width>264</width>
+            <height>169</height>
         </rect>
     </property>
     <property name="caption">
-        <string>AudioScrobbler Settings</string>
+        <string>AudioScrobbler Login</string>
     </property>
     <vbox>
         <property name="name">
@@ -21,63 +21,59 @@
         </property>
         <widget class="QGroupBox">
             <property name="name">
-                <cstring>groupBox2</cstring>
+                <cstring>groupBox1</cstring>
             </property>
             <property name="frameShape">
                 <enum>NoFrame</enum>
             </property>
+            <property name="frameShadow">
+                <enum>Plain</enum>
+            </property>
             <property name="title">
                 <string></string>
+            </property>
+            <property name="flat">
+                <bool>false</bool>
             </property>
             <grid>
                 <property name="name">
                     <cstring>unnamed</cstring>
                 </property>
+                <widget class="QLineEdit" row="0" column="1">
+                    <property name="name">
+                        <cstring>kcfg_username</cstring>
+                    </property>
+                </widget>
                 <widget class="QLabel" row="0" column="0">
                     <property name="name">
                         <cstring>textLabel1</cstring>
                     </property>
                     <property name="text">
-                        <string>&amp;Cache Save Interval:</string>
+                        <string>&amp;Username:</string>
                     </property>
                     <property name="buddy" stdset="0">
-                        <cstring>kcfg_cachesaveinterval</cstring>
+                        <cstring>kcfg_username</cstring>
                     </property>
                 </widget>
-                <widget class="QSpinBox" row="0" column="2">
+                <widget class="QLineEdit" row="1" column="1">
                     <property name="name">
-                        <cstring>kcfg_cachesaveinterval</cstring>
+                        <cstring>kcfg_password</cstring>
                     </property>
-                    <property name="suffix">
-                        <string>min</string>
-                    </property>
-                    <property name="maxValue">
-                        <number>20</number>
-                    </property>
-                    <property name="minValue">
-                        <number>1</number>
-                    </property>
-                    <property name="toolTip" stdset="0">
-                        <string></string>
+                    <property name="echoMode">
+                        <enum>Password</enum>
                     </property>
                 </widget>
-                <spacer row="0" column="1">
+                <widget class="QLabel" row="1" column="0">
                     <property name="name">
-                        <cstring>spacer1</cstring>
+                        <cstring>textLabel2</cstring>
                     </property>
-                    <property name="orientation">
-                        <enum>Horizontal</enum>
+                    <property name="text">
+                        <string>&amp;Password:</string>
                     </property>
-                    <property name="sizeType">
-                        <enum>Expanding</enum>
+                    <property name="buddy" stdset="0">
+                        <cstring>kcfg_password</cstring>
                     </property>
-                    <property name="sizeHint">
-                        <size>
-                            <width>40</width>
-                            <height>20</height>
-                        </size>
-                    </property>
-                </spacer>
+                </widget>
             </grid>
         </widget>
     </vbox>

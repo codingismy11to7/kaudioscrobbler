@@ -35,7 +35,7 @@ public:
 
 public slots:
     void statusMessage( const QString& );
-    
+    void newSong( const QString& );    
 };
 
 #endif

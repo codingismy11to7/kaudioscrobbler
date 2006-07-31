@@ -9,7 +9,7 @@
             <x>0</x>
             <y>0</y>
             <width>365</width>
-            <height>240</height>
+            <height>242</height>
         </rect>
     </property>
     <property name="caption">
@@ -53,7 +53,7 @@
                 </font>
             </property>
             <property name="text">
-                <string>Last 5 Songs:</string>
+                <string>Last Songs:</string>
             </property>
             <property name="alignment">
                 <set>AlignTop|AlignRight</set>
@@ -62,6 +62,9 @@
         <widget class="QTextEdit" row="1" column="1">
             <property name="name">
                 <cstring>songsPlayed</cstring>
+            </property>
+            <property name="textFormat">
+                <enum>LogText</enum>
             </property>
             <property name="readOnly">
                 <bool>true</bool>

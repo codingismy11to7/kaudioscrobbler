@@ -35,7 +35,7 @@ public:
 
     int getSubCount( void );
     
-    void addSubmission( QString artist, QString songtitle, QString album, QString mbid, int seconds, QString time );
+    void addSubmission( QString artist, QString songtitle, QString album, QString mbid, int seconds/*, QString time*/ );
 
     QCString getPostData( QString username, QString md5response ); 
         
