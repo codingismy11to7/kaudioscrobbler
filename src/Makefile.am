@@ -20,7 +20,7 @@ KDE_ICON = kaudioscrobbler
 bin_PROGRAMS = kaudioscrobbler
 
 # the application source, library search path, and link libraries
-kaudioscrobbler_SOURCES = main.cpp kaudioscrobbler.cpp audioscrobbler.cpp md5.c qmd5.cpp scrobrequestthread.cpp scrobsettingsdialog.ui kasconfig.cpp scrobstatusdialog.ui scrobstatus.cpp kascachelist.cpp
+kaudioscrobbler_SOURCES = main.cpp kaudioscrobbler.cpp audioscrobbler.cpp md5.c qmd5.cpp scrobrequestthread.cpp scrobsettingsdialog.ui kasconfig.cpp scrobstatusdialog.ui scrobstatus.cpp kascachelist.cpp scroblogindialog.ui
 kaudioscrobbler_LDFLAGS = $(KDE_RPATH) $(all_libraries)
 kaudioscrobbler_LDADD = $(LIB_KIO) $(LIB_KDEUI)
 

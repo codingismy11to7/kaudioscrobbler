@@ -34,8 +34,8 @@
 #include "scrobrequestthread.h"
 #include "kascachelist.h"
 
-#define HANDSHAKE_ADDR "http://post.audioscrobbler.com?hs=true&p=1.1&c=juk&v=0.0.1&u="
-//#define HANDSHAKE_ADDR "http://progoth/~progoth/kas/?hs=true&p=1.1&c=juk&v=0.0.1&u="
+//#define HANDSHAKE_ADDR "http://post.audioscrobbler.com?hs=true&p=1.1&c=juk&v=0.0.1&u="
+#define HANDSHAKE_ADDR "http://progoth/~progoth/kas/?hs=true&p=1.1&c=juk&v=0.0.1&u="
 
 class KConfigSkeleton;
 
@@ -52,6 +52,7 @@ public:
 
 signals:
     void statusMessage( const QString& );
+    void songPlayed( const QString& );
 
 public slots:
     void doHandshake();
@@ -67,7 +68,10 @@ public slots:
 
 protected slots:        
     void saveCacheToDisk( void );
+    void saveLockedCacheToDisk( void );
     void loadCacheFromDisk( void );
+    
+    void submit( void );
     
 protected:
     /*QString*/void doRequest( const KURL &address, QString postdata = QString::null );
@@ -94,10 +98,12 @@ protected:
     QString m_password;
     
     QTimer *hsTimer;
+    QTimer *intervalTimer;
     
     ScrobRequestThread *m_job_thread;
     
     unsigned int m_interval;
+    unsigned int m_cachesaveinterval;
 };
 
 #endif
