@@ -20,9 +20,9 @@ KDE_ICON = kaudioscrobbler
 bin_PROGRAMS = kaudioscrobbler
 
 # the application source, library search path, and link libraries
-kaudioscrobbler_SOURCES = main.cpp kaudioscrobbler.cpp
+kaudioscrobbler_SOURCES = main.cpp kaudioscrobbler.cpp audioscrobbler.cpp md5.c qmd5.cpp scrobrequestthread.cpp
 kaudioscrobbler_LDFLAGS = $(KDE_RPATH) $(all_libraries)
-kaudioscrobbler_LDADD = $(LIB_KDEUI)
+kaudioscrobbler_LDADD = $(LIB_KIO) $(LIB_KDEUI)
 
 # this is where the desktop file will go 
 shelldesktopdir   = $(kde_appsdir)/Utilities
