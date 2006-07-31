@@ -73,7 +73,7 @@ void KAudioScrobbler::showSettings( void )
 
 void KAudioScrobbler::run_test( void )
 {
-    scrob->play( "Various Artists", "From Autumn to Ashes / Chloroform Perfume", "Punk Goes Acoustic", "", 31 );
+    scrob->play( "Various Artists", "From Autumn to Ashes / Chloroform Perfume", "Punk Goes Acoustic", "", 300 );
 }
 
 void KAudioScrobbler::run_test2( void )
