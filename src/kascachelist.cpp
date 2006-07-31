@@ -17,53 +17,58 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef SCROBREQUESTTHREAD_H
-#define SCROBREQUESTTHREAD_H
-
-#include <qobject.h>
-//#include <qthread.h>
-//#include <qwaitcondition.h>
-#include <qcstring.h>
-#include <qbuffer.h>
+#include "kascachelist.h"
 
 #include <kurl.h>
-#include <kio/global.h>
-#include <kio/job.h>
 
-#include <kdebug.h>
+/*KASCacheList::KASCacheList(QObject *parent, const char *name)
+ : QStringList(parent, name)
+{
+}*/
+
+
+/*KASCacheList::~KASCacheList()
+{
+}*/
 
 /**
-@author Steven Scott
-*/
-class ScrobRequestThread : public QObject//, public QThread
+ * gets the number of cached audioscrobbler entries
+ */
+int KASCacheList::getSubCount( void )
 {
-Q_OBJECT
-public:
-    ScrobRequestThread(  );
+    return count() / 6;
+}
 
-    ~ScrobRequestThread();
+void KASCacheList::addSubmission( QString artist, QString songtitle, QString album, QString mbid, int seconds, QString time )
+{
+    append( KURL::encode_string_no_slash( artist ).utf8() );
+    append( KURL::encode_string_no_slash( songtitle ).utf8() );
+    append( KURL::encode_string_no_slash( album ).utf8() );
+    append( mbid );
+    append( QString::number( seconds ) );
+    append( KURL::encode_string_no_slash( time ) );
+}
 
-    void run( void );
+QCString KASCacheList::getPostData( QString username, QString md5response )
+{
+    username = KURL::encode_string_no_slash( username );
     
-    void setJob( const KURL &url, const QByteArray &postdata );
+    QString ret;
+    ret += "u=" + username + "&s=" + md5response;
+    int total = getSubCount();
+    for( int i = 0; i < total; i++ )
+    {
+        QString n = QString::number( i );
+        
+        ret += "&a[" + n + "]=" + (*this)[0 + i * 6]
+            +  "&t[" + n + "]=" + (*this)[1 + i * 6]
+            +  "&b[" + n + "]=" + (*this)[2 + i * 6]
+            +  "&m[" + n + "]=" + (*this)[3 + i * 6]
+            +  "&l[" + n + "]=" + (*this)[4 + i * 6]
+            +  "&i[" + n + "]=" + (*this)[5 + i * 6];
+    }
     
-    //QString result;
-    
-signals:
-    void response( QString );
-    void http_error();
-    
-private slots:
-    void transferResult( KIO::Job *job );
-    void dataReceived( KIO::Job *job, const QByteArray &data );
-    
-private:
-    //QWaitCondition *m_jobdone;
-    
-    QBuffer *m_tmpdata;
-    
-    KURL m_current_url;
-    QByteArray m_current_post;
-};
+    return ret.utf8();
+}
 
-#endif
+#include "kascachelist.moc"

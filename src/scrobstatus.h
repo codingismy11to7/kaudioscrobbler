@@ -17,82 +17,25 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef AUDIOSCROBBLER_H
-#define AUDIOSCROBBLER_H
+#ifndef SCROBSTATUS_H
+#define SCROBSTATUS_H
 
-#include <qstring.h>
-#include <qwaitcondition.h>
-#include <qmutex.h>
-#include <qregexp.h>
-#include <qdatetime.h>
-#include <qtimer.h>
-
-#include <kurl.h>
-#include <kdebug.h>
-
-#include "qmd5.h"
-#include "scrobrequestthread.h"
-#include "kascachelist.h"
-
-//#define HANDSHAKE_ADDR "http://post.audioscrobbler.com?hs=true&p=1.1&c=juk&v=0.0.1&u="
-#define HANDSHAKE_ADDR "http://localhost/~progoth/?hs=true&p=1.1&c=juk&v=0.0.1&u="
+#include <scrobstatusdialog.h>
 
 /**
 @author Steven Scott
 */
-class AudioScrobbler : public QObject
+class ScrobStatus : public ScrobStatusDialog
 {
 Q_OBJECT
 public:
-    AudioScrobbler( QWidget *parent );
+    ScrobStatus(QWidget *parent = 0, const char *name = 0);
 
-    ~AudioScrobbler();
-
-signals:
-    void statusMessage( const QString& );
+    ~ScrobStatus();
 
 public slots:
-    void doHandshake();
-    void run_test2( void );
-    void gotResponse( QString response );
-    void gotError( void );
+    void statusMessage( const QString& );
     
-    void setInterval( unsigned int interval );
-
-    void showSettings();
-    
-    void setSettings( void );
-        
-protected:
-    /*QString*/void doRequest( const KURL &address, QString postdata = QString::null );
-    
-    void cacheSettings( QWidget *parent );
-    
-    void parseResponse( QString response );
-    
-    void setPassword( QString password );
-    
-    void saveCacheToDisk( void );
-    void loadCacheFromDisk( void );
-    
-    inline QString md5Response( void );
-    
-    KASCacheList m_subcache;
-    QMutex m_cache_mutex;
-    
-    QString m_postaddress;
-    QString m_challenge;
-    QMutex m_job;
-    bool m_handshake_done;
-    
-    QString m_username;
-    QString m_password;
-    
-    QTimer *hsTimer;
-    
-    ScrobRequestThread *m_job_thread;
-    
-    unsigned int m_interval;
 };
 
 #endif
