@@ -2,7 +2,7 @@
 INCLUDES = $(all_includes)
 
 # these are the headers for your project
-noinst_HEADERS = kaudioscrobbler.h
+noinst_HEADERS = kaudioscrobbler.h md5.h audioscrobbler.h scrobrequestthread.h qmd5.h
 
 # let automoc handle all of the meta source files (moc)
 METASOURCES = AUTO

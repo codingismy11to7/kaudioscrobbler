@@ -25,14 +25,17 @@
 #include <config.h>
 #endif
 
-#include <kmainwindow.h>
+//#include <kmainwindow.h>
+#include <qvbox.h>
+
+#include "audioscrobbler.h"
 
 /**
  * @short Application Main Window
  * @author Steven Scott <progoth@progoth.com>
  * @version 0.1
  */
-class KAudioScrobbler : public KMainWindow
+class KAudioScrobbler : public QVBox//KMainWindow
 {
     Q_OBJECT
 public:
@@ -45,6 +48,17 @@ public:
      * Default Destructor
      */
     virtual ~KAudioScrobbler();
+    
+signals:
+    void exitCalled();
+    
+private:
+    AudioScrobbler *scrob;
+    
+private slots:
+
+    void run_test();
+    void run_test2();
 };
 
 #endif // _KAUDIOSCROBBLER_H_

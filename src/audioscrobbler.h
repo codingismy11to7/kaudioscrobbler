@@ -17,54 +17,65 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef AUDIOSCROBBLER_H
+#define AUDIOSCROBBLER_H
 
-#include "kaudioscrobbler.h"
+#include <qstring.h>
+#include <qwaitcondition.h>
+#include <qmutex.h>
+#include <qregexp.h>
+#include <qdatetime.h>
 
-#include <qlabel.h>
+#include <kurl.h>
+#include <kdebug.h>
 
-#include <kmainwindow.h>
-#include <klocale.h>
+#include "qmd5.h"
+#include "scrobrequestthread.h"
 
-KAudioScrobbler::KAudioScrobbler()
-    : QVBox()//KMainWindow( 0, "KAudioScrobbler" )
+#define HANDSHAKE_ADDR "http://post.audioscrobbler.com?hs=true&p=1.1&c=juk&v=0.0.1&u="
+
+/**
+@author Steven Scott
+*/
+class AudioScrobbler : public QObject
 {
-    // set the shell's ui resource file
-    //setXMLFile("kaudioscrobblerui.rc");
+Q_OBJECT
+public:
+    AudioScrobbler( QString username, QString password );
 
-    resize( 400, 400 );
-    
-    QPushButton *tester = new QPushButton( "Test", this, "testbtn" );    
-    
-    connect( tester, SIGNAL( clicked() ), this, SLOT(run_test()) );
-    
-    QPushButton *tester2 = new QPushButton( "Test2", this, "uaoe" );
-    connect( tester2, SIGNAL( clicked() ), this, SLOT( run_test2()) );
-    
-    QLabel *status = new QLabel( "STATUS", this, "statuslabel" );
-    
-    new QLabel( QString( "'': " ) + QMD5::MD5( "" ), this, "md5label" );
-    new QLabel( QString( "'a': " ) + QMD5::MD5( "a" ), this, "md52label" );
-    new QLabel( QString( "'abc': " ) + QMD5::MD5( "abc" ), this, "md53label" );
-    
-    scrob = new AudioScrobbler( "progothdevtest", "password" );
-    
-    connect( scrob, SIGNAL(statusMessage(const QString&)), status, SLOT(setText(const QString&)) );
-}
+    ~AudioScrobbler();
 
-KAudioScrobbler::~KAudioScrobbler()
-{
-    delete scrob;
-}
+    void setPassword( QString password );
+    
+signals:
+    void statusMessage( const QString& );
 
-void KAudioScrobbler::run_test( void )
-{
-    scrob->run_test();
-}
+public slots:
+    void run_test( void );
+    void run_test2( void );
+    void gotResponse( QString response );
+    void gotError( void );
+    
+    void setInterval( unsigned int interval );
+    
+protected:
+    /*QString*/void doRequest( const KURL &address, QString postdata = QString::null );
+    
+    void parseResponse( QString response );
+    
+    inline QString md5Response( void );
+    
+    QString m_postaddress;
+    QString m_challenge;
+    QMutex m_job;
+    bool m_handshake_done;
+    
+    QString m_username;
+    QString m_password;
+    
+    ScrobRequestThread *m_job_thread;
+    
+    unsigned int m_interval;
+};
 
-void KAudioScrobbler::run_test2( void )
-{
-    scrob->run_test2();
-}
-
-
-#include "kaudioscrobbler.moc"
+#endif

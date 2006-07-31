@@ -17,54 +17,44 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#include "qmd5.h"
 
-#include "kaudioscrobbler.h"
-
-#include <qlabel.h>
-
-#include <kmainwindow.h>
-#include <klocale.h>
-
-KAudioScrobbler::KAudioScrobbler()
-    : QVBox()//KMainWindow( 0, "KAudioScrobbler" )
+QMD5::QMD5()
 {
-    // set the shell's ui resource file
-    //setXMLFile("kaudioscrobblerui.rc");
-
-    resize( 400, 400 );
-    
-    QPushButton *tester = new QPushButton( "Test", this, "testbtn" );    
-    
-    connect( tester, SIGNAL( clicked() ), this, SLOT(run_test()) );
-    
-    QPushButton *tester2 = new QPushButton( "Test2", this, "uaoe" );
-    connect( tester2, SIGNAL( clicked() ), this, SLOT( run_test2()) );
-    
-    QLabel *status = new QLabel( "STATUS", this, "statuslabel" );
-    
-    new QLabel( QString( "'': " ) + QMD5::MD5( "" ), this, "md5label" );
-    new QLabel( QString( "'a': " ) + QMD5::MD5( "a" ), this, "md52label" );
-    new QLabel( QString( "'abc': " ) + QMD5::MD5( "abc" ), this, "md53label" );
-    
-    scrob = new AudioScrobbler( "progothdevtest", "password" );
-    
-    connect( scrob, SIGNAL(statusMessage(const QString&)), status, SLOT(setText(const QString&)) );
+    md5_init( &m_state );
 }
 
-KAudioScrobbler::~KAudioScrobbler()
+QMD5::~QMD5()
 {
-    delete scrob;
 }
 
-void KAudioScrobbler::run_test( void )
+void QMD5::add( QString in )
 {
-    scrob->run_test();
+    md5_append( &m_state, (const md5_byte_t *)in.ascii(), in.length() ); 
 }
 
-void KAudioScrobbler::run_test2( void )
+QString QMD5::getMD5( void )
 {
-    scrob->run_test2();
+    md5_state_t t_state;
+    t_state = m_state; // let's make a copy so we can get multiple md5's from this obj
+
+    md5_byte_t digest[16];
+    char output[33];
+    
+    md5_finish( &t_state, digest );
+
+    for( int i = 0; i < 16; i++ )
+    {
+        sprintf( output + i*2, "%02x", digest[i] );
+    }
+
+    return output;
 }
 
+QString QMD5::MD5( QString in )
+{
+    QMD5 t;
+    t.add( in );
+    return t.getMD5();
+}
 
-#include "kaudioscrobbler.moc"
