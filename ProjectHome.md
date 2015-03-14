@@ -1,0 +1,1 @@
+This is C++ code using QT and KDE libraries implementing the AudioScrobbler / last.fm protocol.  As a proof of concept it was integrated into JuK using only a few lines of code.
